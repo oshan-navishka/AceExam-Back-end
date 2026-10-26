@@ -2,6 +2,7 @@ import authRouter from "./routes/auth.route";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import subjectRouter from "./routes/subject.route";
 
 dotenv.config();
 
@@ -21,6 +22,11 @@ app.get("/", (req, res) => {
 app.use(
   "/api/auth",
   authRouter
+);
+
+app.use(
+  "/api/subjects",
+  subjectRouter
 );
 
 export default app;
