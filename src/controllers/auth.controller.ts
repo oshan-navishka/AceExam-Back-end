@@ -37,12 +37,18 @@ export const registerUser = async (
       user._id.toString(),
       user.role
     );
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
 
     res.status(201).json({
       success: true,
       message:
         "User registered successfully",
-      user,
+      user: userResponse,
       token
     });
 
@@ -94,7 +100,12 @@ export const loginUser = async (
       success: true,
       message: "Login Success",
       token,
-      user,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
 
   } catch (error) {
