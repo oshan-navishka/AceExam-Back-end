@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import bcrypt from "bcryptjs";
+import generateToken from "../utils/generateToken";
 
 export const registerUser = async (
   req: Request,
@@ -32,11 +33,17 @@ export const registerUser = async (
       password: hashedPassword,
     });
 
+    const token = generateToken(
+      user._id.toString(),
+      user.role
+    );
+
     res.status(201).json({
       success: true,
       message:
         "User registered successfully",
       user,
+      token
     });
 
   } catch (error) {
@@ -78,9 +85,16 @@ export const loginUser = async (
       });
     }
 
+    const token = generateToken(
+      user._id.toString(),
+      user.role
+    );
+
     res.status(200).json({
       success: true,
-      message: "Login Success"
+      message: "Login Success",
+      token,
+      user,
     });
 
   } catch (error) {

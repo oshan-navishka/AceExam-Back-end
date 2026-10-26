@@ -5,7 +5,10 @@ const generateToken = (
   role: string
 ) => {
   return jwt.sign(
-    { id, role },
+    {
+      id,
+      role,
+    },
     process.env.JWT_SECRET as string,
     {
       expiresIn: "7d",
