@@ -16,6 +16,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",
       "https://ace-exam-front-end-z9bj.vercel.app"
     ],
     credentials: true,

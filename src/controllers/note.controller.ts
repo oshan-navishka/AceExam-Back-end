@@ -197,11 +197,6 @@ export const deleteNote = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Note not found" });
     }
 
-    // Remove the physical file
-    if (note.filePath && fs.existsSync(note.filePath)) {
-      fs.unlinkSync(note.filePath);
-    }
-
     res.status(200).json({ success: true, message: "Note deleted successfully" });
   } catch (error) {
     console.log(error);
