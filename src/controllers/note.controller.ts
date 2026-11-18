@@ -118,21 +118,32 @@ export const getNotePdf = async (req: Request, res: Response) => {
       targetPath = path.join(process.cwd(), targetPath);
     }
 
-    if (!fs.existsSync(targetPath)) {
-      const candidates = [
-        path.join(process.cwd(), "uploads", "notes", note.fileName),
-        path.join(process.cwd(), "uploads", "notes", path.basename(note.filePath)),
-      ];
-      const found = candidates.find((c) => fs.existsSync(c));
-      if (found) {
-        targetPath = found;
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: "PDF file does not exist on server",
-        });
-      }
+    const possiblePaths = [
+      targetPath,
+      path.resolve(process.cwd(), targetPath),
+      path.resolve(process.cwd(), "uploads", "notes", path.basename(note.filePath)),
+      path.resolve(process.cwd(), "uploads", "notes", note.fileName),
+      path.resolve(process.cwd(), "backend", "uploads", "notes", path.basename(note.filePath)),
+      path.resolve(process.cwd(), "backend", "uploads", "notes", note.fileName),
+      path.resolve(process.cwd(), "src", "upload", "notes", path.basename(note.filePath)),
+      path.resolve(process.cwd(), "src", "upload", "notes", note.fileName),
+      path.resolve(process.cwd(), "backend", "src", "upload", "notes", path.basename(note.filePath)),
+      path.resolve(process.cwd(), "backend", "src", "upload", "notes", note.fileName),
+      path.resolve(__dirname, "../../uploads/notes", path.basename(note.filePath)),
+      path.resolve(__dirname, "../../uploads/notes", note.fileName),
+      path.resolve(__dirname, "../upload/notes", path.basename(note.filePath)),
+      path.resolve(__dirname, "../upload/notes", note.fileName),
+    ];
+
+    const found = possiblePaths.find((p) => fs.existsSync(p));
+    if (!found) {
+      return res.status(404).json({
+        success: false,
+        message: "PDF file does not exist on server",
+      });
     }
+
+    targetPath = found;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -140,7 +151,12 @@ export const getNotePdf = async (req: Request, res: Response) => {
       `inline; filename="${encodeURIComponent(note.fileName || "note.pdf")}"`
     );
 
-    res.sendFile(path.resolve(targetPath));
+    res.sendFile(path.resolve(targetPath), (err) => {
+      if (err && !res.headersSent) {
+        console.error("res.sendFile error:", err);
+        res.status(500).json({ success: false, message: "Error sending PDF file" });
+      }
+    });
   } catch (error) {
     console.error("getNotePdf error:", error);
     res.status(500).json({ success: false, message: "Server Error", error });
