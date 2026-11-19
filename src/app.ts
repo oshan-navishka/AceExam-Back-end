@@ -1,6 +1,8 @@
+
 import express from "express";
 import cors from "cors";
 import path from "path";
+import connectDB from "./config/db";
 
 import authRouter from "./routes/auth.route";
 import subjectRouter from "./routes/subject.route";
@@ -13,21 +15,36 @@ import analyticsRouter from "./routes/analytics.route";
 
 const app = express();
 
+// CORS Configuration
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://ace-exam-front-end-z9bj.vercel.app"
+      "https://ace-exam-front-end-z9bj.vercel.app",
     ],
     credentials: true,
   })
 );
 
+// Body Parsers
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// MongoDB Connection Middleware
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("MongoDB connection failed:", error);
+    next(error);
+  }
+});
+
+// Static Uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+// Home Route
 app.get("/", (_req, res) => {
   res.json({
     success: true,
@@ -46,6 +63,7 @@ app.get("/", (_req, res) => {
   });
 });
 
+// API Routes
 app.use("/api/auth", authRouter);
 app.use("/api/subjects", subjectRouter);
 app.use("/api/exams", examRouter);
@@ -55,24 +73,43 @@ app.use("/api/papers", generatedPaperRouter);
 app.use("/api/results", examResultRouter);
 app.use("/api/analytics", analyticsRouter);
 
+// 404 Handler
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
-});
-
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error("Unhandled error:", err);
-
-  if (err.message === "Only PDF files are allowed") {
-    return res.status(400).json({ success: false, message: err.message });
-  }
-  if (err.code === "LIMIT_FILE_SIZE") {
-    return res.status(400).json({ success: false, message: "File too large. Max 20MB." });
-  }
-
-  res.status(err.status || 500).json({
+  res.status(404).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: "Route not found",
   });
 });
+
+// Global Error Handler
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error("Unhandled error:", err);
+
+    if (err.message === "Only PDF files are allowed") {
+      return res.status(400).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File too large. Max 20MB.",
+      });
+    }
+
+    res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "Internal Server Error",
+    });
+  }
+);
 
 export default app;

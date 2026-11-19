@@ -1,8 +1,5 @@
-import "dotenv/config";
-import connectDB from "../src/config/db";
-import app from "../src/app";
 
-// Connect to MongoDB before handling requests
-connectDB();
+import "dotenv/config";
+import app from "../src/app";
 
 export default app;
